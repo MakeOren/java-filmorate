@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.validation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -39,7 +40,7 @@ class FilmValidationTest {
         film.setName(null);
         assertThrows(ValidationException.class, () -> filmController.create(film));
         film.setId(1L);
-        assertThrows(ValidationException.class, () -> filmController.update(film));
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
     @Test
@@ -47,7 +48,7 @@ class FilmValidationTest {
         film.setName("   ");
         assertThrows(ValidationException.class, () -> filmController.create(film));
         film.setId(1L);
-        assertThrows(ValidationException.class, () -> filmController.update(film));
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
     //description
@@ -72,7 +73,7 @@ class FilmValidationTest {
         film.setDescription("a".repeat(201));
         assertThrows(ValidationException.class, () -> filmController.create(film));
         film.setId(1L);
-        assertThrows(ValidationException.class, () -> filmController.update(film));
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
     //duration
@@ -89,7 +90,7 @@ class FilmValidationTest {
         film.setDuration(0);
         assertThrows(ValidationException.class, () -> filmController.create(film));
         film.setId(1L);
-        assertThrows(ValidationException.class, () -> filmController.update(film));
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
     @Test
@@ -97,7 +98,7 @@ class FilmValidationTest {
         film.setDuration(-1);
         assertThrows(ValidationException.class, () -> filmController.create(film));
         film.setId(1L);
-        assertThrows(ValidationException.class, () -> filmController.update(film));
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
     //release date
@@ -122,6 +123,6 @@ class FilmValidationTest {
         film.setReleaseDate(LocalDate.of(1895, 12, 27));
         assertThrows(ValidationException.class, () -> filmController.create(film));
         film.setId(1L);
-        assertThrows(ValidationException.class, () -> filmController.update(film));
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 }

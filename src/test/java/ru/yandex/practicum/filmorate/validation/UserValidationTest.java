@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.validation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -38,7 +39,7 @@ public class UserValidationTest {
         user.setEmail(null);
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId((long) 1);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 
     @Test
@@ -46,7 +47,7 @@ public class UserValidationTest {
         user.setEmail("   ");
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId((long) 1);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 
     @Test
@@ -54,7 +55,7 @@ public class UserValidationTest {
         user.setEmail("hyizenberg");
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId((long) 1);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 
     @Test
@@ -70,7 +71,7 @@ public class UserValidationTest {
         user.setLogin(null);
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId(1L);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 
     @Test
@@ -78,7 +79,7 @@ public class UserValidationTest {
         user.setLogin("   ");
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId(1L);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 
     @Test
@@ -86,7 +87,7 @@ public class UserValidationTest {
         user.setLogin("invalid login");
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId(1L);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 
     //name
@@ -142,6 +143,6 @@ public class UserValidationTest {
         user.setBirthday(LocalDate.now().plusDays(1));
         assertThrows(ValidationException.class, () -> userController.create(user));
         user.setId(1L);
-        assertThrows(ValidationException.class, () -> userController.update(user));
+        assertThrows(NotFoundException.class, () -> userController.update(user));
     }
 }

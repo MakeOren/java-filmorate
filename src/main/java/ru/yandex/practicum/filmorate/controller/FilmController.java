@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -82,7 +83,7 @@ public class FilmController {
         Film film = films.get(updateFilm.getId());
 
         if (film == null) {
-            throw new ValidationException("Фильм с данным `id` не найден");
+            throw new NotFoundException("Фильм с данным `id` не найден");
         }
 
         validateFilm(updateFilm);

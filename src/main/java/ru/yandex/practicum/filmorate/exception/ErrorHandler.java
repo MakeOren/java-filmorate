@@ -18,6 +18,13 @@ public class ErrorHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundError(Exception ex, HttpServletRequest request) {
+        log.warn(ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception ex, HttpServletRequest request) {
         log.error("Ошибка при запросе: {} {}", request.getMethod(), request.getRequestURI(), ex);
