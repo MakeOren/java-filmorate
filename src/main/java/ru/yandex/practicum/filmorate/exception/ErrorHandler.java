@@ -30,10 +30,5 @@ public class ErrorHandler {
 
 }
 
-@Data
-@AllArgsConstructor
-class ErrorResponse {
-    private String message;
-}
 
 
