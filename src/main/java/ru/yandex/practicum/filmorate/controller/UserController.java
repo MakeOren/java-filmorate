@@ -19,9 +19,10 @@ public class UserController {
 
     @PostMapping
     public User create(@RequestBody User user) {
+        validateUser(user);
+
         long id = getNextId();
 
-        validateUser(user);
         user.setId(id);
         users.put(user.getId(), user);
 
@@ -41,6 +42,7 @@ public class UserController {
 
     @GetMapping
     public Collection<User> findAll() {
+        log.info("Вызван метод UserController.findAll()");
         return users.values();
     }
 
@@ -83,10 +85,12 @@ public class UserController {
             user.setName(user.getLogin());
         }
 
-        if (user.getBirthday() != null) {
-            if (user.getBirthday().isAfter(LocalDate.now())) {
-                throw new ValidationException("Дата рождения не может быть в будущем");
-            }
+        if (user.getBirthday() == null) {
+            throw new ValidationException("Поле 'birthday' не может быть пустым");
+        }
+
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть в будущем");
         }
 
 

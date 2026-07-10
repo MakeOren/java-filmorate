@@ -20,9 +20,10 @@ public class FilmController {
 
     @PostMapping
     public Film create(@RequestBody Film film) {
+        validateFilm(film);
+
         long id = getNextId();
 
-        validateFilm(film);
         film.setId(id);
         films.put(film.getId(), film);
 
@@ -42,6 +43,7 @@ public class FilmController {
 
     @GetMapping
     public Collection<Film> findAll() {
+        log.info("Вызван метод FilmController.findAll()");
         return films.values();
     }
 
@@ -54,20 +56,19 @@ public class FilmController {
             throw new ValidationException("Поле 'name' не может быть пустым");
         }
 
-        if (film.getDescription() != null) {
-            if (film.getDescription().length() > 200) {
-                throw new ValidationException("Поле 'description' не может больше 200");
-            }
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
+            throw new ValidationException("Поле 'description' не может больше 200");
         }
 
         if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность должна быть положительным числом");
         }
 
-        if (film.getReleaseDate() != null) {
-            if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-                throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-            }
+        if (film.getReleaseDate() == null) {
+            throw new ValidationException("Поле 'releaseDate' не может быть пустым");
+        }
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
     }
 

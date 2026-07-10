@@ -103,11 +103,15 @@ class FilmValidationTest {
 
     //release date
     @Test
-    void shouldNotThrowExceptionWhenReleaseDateIsNull() {
+    void shouldThrowExceptionWhenReleaseDateIsNull() {
         film.setReleaseDate(null);
+        assertThrows(ValidationException.class, () -> filmController.create(film));
+
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
         filmController.create(film);
-        film.setId(1L);
-        filmController.update(film);
+
+        film.setReleaseDate(null);
+        assertThrows(ValidationException.class, () -> filmController.update(film));
     }
 
     @Test

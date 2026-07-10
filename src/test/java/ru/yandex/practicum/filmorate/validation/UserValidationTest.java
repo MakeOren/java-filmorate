@@ -115,11 +115,15 @@ public class UserValidationTest {
 
     //birthday
     @Test
-    void shouldNotThrowExceptionWhenBirthdayIsNull() {
+    void shouldThrowExceptionWhenBirthdayIsNull() {
         user.setBirthday(null);
+        assertThrows(ValidationException.class, () -> userController.create(user));
+
+        user.setBirthday(LocalDate.of(2002, 5, 7));
         userController.create(user);
-        user.setId(1L);
-        userController.update(user);
+
+        user.setBirthday(null);
+        assertThrows(ValidationException.class, () -> userController.update(user));
     }
 
     @Test
