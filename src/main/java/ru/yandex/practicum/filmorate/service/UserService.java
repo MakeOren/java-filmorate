@@ -37,6 +37,14 @@ public class UserService {
         return newUpdateUser;
     }
 
+    public Collection<User> findAllFriends(Long userId) {
+        if (userId == null) {
+            throw new ValidationException("Поле 'id' не может быть пустым");
+        }
+
+        log.info("Вызван метод UserService.findAllFriends()");
+        return new ArrayList<>(userStorage.findAllFriendsUser(userId));
+    }
 
     public Collection<User> findAll() {
         log.info("Вызван метод UserService.findAll()");
@@ -77,6 +85,10 @@ public class UserService {
     }
 
     private void validateUpdateUser(User updateUser) {
+        if (updateUser == null) {
+            throw new ValidationException("Тело запроса не может быть пустым");
+        }
+
         if (updateUser.getId() == null) {
             throw new ValidationException("Поле `id` не может быть пустым");
         }
