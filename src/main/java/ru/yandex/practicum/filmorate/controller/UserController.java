@@ -15,7 +15,7 @@ import java.util.HashMap;
 @RequestMapping("/users")
 public class UserController {
     private final HashMap<Long, User> users = new HashMap<>();
-    private long currentId = 0L;
+
 
     @PostMapping
     public User create(@RequestBody User user) {
@@ -96,9 +96,7 @@ public class UserController {
 
     }
 
-    private long getNextId() {
-        return ++currentId;
-    }
+
 
     private void validateUpdateUser(User updateUser) {
         if (updateUser.getId() == 0) {
