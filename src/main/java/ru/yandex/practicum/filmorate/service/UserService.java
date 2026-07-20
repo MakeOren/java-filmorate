@@ -29,6 +29,8 @@ public class UserService {
 
 
     public User update(User updateUser) {
+        userStorage.getUserById(updateUser.getId());
+
         validateUpdateUser(updateUser);
 
         User newUpdateUser = userStorage.update(updateUser);
@@ -71,6 +73,10 @@ public class UserService {
         log.info("Вызван метод UserService.getCommonFriends()");
 
         return new ArrayList<>(userFriends1);
+    }
+
+    public User getUserById(Long userId) {
+        return userStorage.getUserById(userId);
     }
 
     private void validateUser(User user) {

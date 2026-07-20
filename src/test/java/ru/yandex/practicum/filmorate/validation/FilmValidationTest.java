@@ -6,6 +6,11 @@ import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
@@ -15,6 +20,9 @@ class FilmValidationTest {
 
     private Film film;
     private FilmController filmController;
+    private FilmStorage filmStorage;
+    private UserStorage userStorage;
+    private FilmService  filmService;
 
     @BeforeEach
     void setUp() {
@@ -24,7 +32,12 @@ class FilmValidationTest {
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
 
-        filmController = new FilmController();
+        filmStorage = new InMemoryFilmStorage();
+        userStorage = new InMemoryUserStorage();
+
+        filmService = new FilmService(userStorage, filmStorage);
+
+        filmController = new FilmController(filmService);
     }
 
     //name
@@ -126,6 +139,12 @@ class FilmValidationTest {
     void shouldThrowExceptionWhenReleaseDateIsBefore28Dec1895() {
         film.setReleaseDate(LocalDate.of(1895, 12, 27));
         assertThrows(ValidationException.class, () -> filmController.create(film));
+        film.setId(1L);
+        assertThrows(NotFoundException.class, () -> filmController.update(film));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFilmNotFound() {
         film.setId(1L);
         assertThrows(NotFoundException.class, () -> filmController.update(film));
     }

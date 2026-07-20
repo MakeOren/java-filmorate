@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-public class InMemoryUserStorage implements UserStorage{
+public class InMemoryUserStorage implements UserStorage {
 
     private final HashMap<Long, Set<Long>> usersFriends = new HashMap<>();
     private final HashMap<Long, User> users = new HashMap<>();

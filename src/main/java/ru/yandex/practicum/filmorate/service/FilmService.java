@@ -31,6 +31,8 @@ public class FilmService {
     }
 
     public Film update(Film updateFilm) {
+        filmStorage.getFilmById(updateFilm.getId());
+
         validateUpdateFilm(updateFilm);
 
         Film newUpdateFilm = filmStorage.update(updateFilm);
@@ -80,8 +82,12 @@ public class FilmService {
        return  films.keySet()
                .stream()
                .sorted(Comparator.comparing(films::get).reversed())
-               .limit(count == null ? countPopularFilm:count)
+               .limit(count == null ? countPopularFilm : count)
                .collect(Collectors.toList());
+    }
+
+    public Film getFilmById(Long filmId) {
+        return filmStorage.getFilmById(filmId);
     }
 
     private void validateFilm(Film film) {
