@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -20,6 +19,7 @@ public class FilmService {
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final int countPopularFilm = 10;
 
     public Film create(Film film) {
         validateFilm(film);
@@ -80,7 +80,7 @@ public class FilmService {
        return  films.keySet()
                .stream()
                .sorted(Comparator.comparing(films::get).reversed())
-               .limit(count)
+               .limit(count == null ? countPopularFilm:count)
                .collect(Collectors.toList());
     }
 
