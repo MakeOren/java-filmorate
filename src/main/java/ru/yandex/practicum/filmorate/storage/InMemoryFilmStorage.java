@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -76,6 +77,14 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
 
         return films.get(filmId);
+    }
+
+    @Override
+    public Collection<List> getPopularFilms(Integer count) {
+        filmsLikeUsers.entrySet()
+                .stream()
+                .sorted(Comparator.comparingInt(entry-> entry.getValue().size()).reversed())
+                .collect(Collectors.toList());
     }
 
     private boolean filmExits(Long id) {

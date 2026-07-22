@@ -75,6 +75,15 @@ public class FilmService {
     }
 
     public Collection<Film> getPopularFilms(Integer count) {
+
+        if (count != null && count <= 0) {
+            throw new ValidationException("Поле 'count' должно быть больше 0");
+        } else if (count == null) {
+            count = 10;
+        }
+
+        return new ArrayList<>(filmStorage.getPopularFilms(count));
+
        Map<Film, Integer> films = filmStorage.findAll()
                .stream()
                .collect(Collectors.toMap(film -> film, film -> filmStorage.findUsersLikeFilm(film.getId()).size()));
