@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -10,7 +11,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
@@ -19,10 +20,14 @@ public class FilmService {
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
-    private final int countPopularFilm = 10;
+    private final int defaultCountPopularFilm = 10;
 
     public Film create(Film film) {
-        validateFilm(film);
+        if (film == null) {
+            throw new ValidationException("Тело запроса не может быть пустым");
+        }
+
+        validateNameAndDescriptionAndDurationAndReleaseDate(film);
 
         Film newFilm = filmStorage.create(film);
 
@@ -31,9 +36,19 @@ public class FilmService {
     }
 
     public Film update(Film updateFilm) {
-        filmStorage.getFilmById(updateFilm.getId());
+        if (updateFilm == null) {
+            throw new ValidationException("Тело запроса не может быть пустым");
+        }
 
-        validateUpdateFilm(updateFilm);
+        if (updateFilm.getId() == null) {
+            throw new ValidationException("Поле `id` не может быть пустым");
+        }
+
+        if (filmStorage.getFilmById(updateFilm.getId()).isEmpty()) {
+            throw new NotFoundException(String.format("Данный фильм c id = %d не найден", updateFilm.getId()));
+        }
+
+        validateNameAndDescriptionAndDurationAndReleaseDate(updateFilm);
 
         Film newUpdateFilm = filmStorage.update(updateFilm);
 
@@ -55,7 +70,13 @@ public class FilmService {
             throw new ValidationException("Поле `userId` не может быть пустым");
         }
 
-        userStorage.getUserById(userId);
+        if (filmStorage.getFilmById(filmId).isEmpty()) {
+            throw new NotFoundException(String.format("Данный фильм c id = %d не найден", filmId));
+        }
+
+        if (userStorage.getUserById(userId).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId));
+        }
 
         filmStorage.addLike(filmId, userId);
     }
@@ -69,54 +90,34 @@ public class FilmService {
             throw new ValidationException("Поле `userId` не может быть пустым");
         }
 
-        userStorage.getUserById(userId);
+        if (filmStorage.getFilmById(filmId).isEmpty()) {
+            throw new NotFoundException(String.format("Данный фильм c id = %d не найден", filmId));
+        }
+
+        if (userStorage.getUserById(userId).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId));
+        }
 
         filmStorage.deleteLike(filmId, userId);
     }
 
     public Collection<Film> getPopularFilms(Integer count) {
-
         if (count != null && count <= 0) {
             throw new ValidationException("Поле 'count' должно быть больше 0");
-        } else if (count == null) {
-            count = 10;
         }
 
-        return new ArrayList<>(filmStorage.getPopularFilms(count));
-
-       Map<Film, Integer> films = filmStorage.findAll()
-               .stream()
-               .collect(Collectors.toMap(film -> film, film -> filmStorage.findUsersLikeFilm(film.getId()).size()));
-
-       return  films.keySet()
-               .stream()
-               .sorted(Comparator.comparing(films::get).reversed())
-               .limit(count == null ? countPopularFilm : count)
-               .collect(Collectors.toList());
+        int limit = (count == null) ? defaultCountPopularFilm : count;
+        return new ArrayList<>(filmStorage.getPopularFilms(limit));
     }
 
     public Film getFilmById(Long filmId) {
-        return filmStorage.getFilmById(filmId);
-    }
+        Optional<Film> filmOptional = filmStorage.getFilmById(filmId);
 
-    private void validateFilm(Film film) {
-        if (film == null) {
-            throw new ValidationException("Тело запроса не может быть пустым");
+        if (filmOptional.isEmpty()) {
+            throw new NotFoundException(String.format("Данный фильм c id = %d не найден", filmId));
         }
 
-        validateNameAndDescriptionAndDurationAndReleaseDate(film);
-    }
-
-    private void validateUpdateFilm(Film updateFilm) {
-        if (updateFilm == null) {
-            throw new ValidationException("Тело запроса не может быть пустым");
-        }
-
-        if (updateFilm.getId() == null) {
-            throw new ValidationException("Поле `id` не может быть пустым");
-        }
-
-        validateNameAndDescriptionAndDurationAndReleaseDate(updateFilm);
+        return filmOptional.get();
     }
 
     private void validateNameAndDescriptionAndDurationAndReleaseDate(Film film) {

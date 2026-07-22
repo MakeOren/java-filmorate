@@ -4,6 +4,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -27,9 +28,18 @@ public class UserService {
         return newUser;
     }
 
-
     public User update(User updateUser) {
-        userStorage.getUserById(updateUser.getId());
+        if (updateUser == null) {
+            throw new ValidationException("Тело запроса не может быть пустым");
+        }
+
+        if (updateUser.getId() == null) {
+            throw new ValidationException("Поле `id` не может быть пустым");
+        }
+
+        if (userStorage.getUserById(updateUser.getId()).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", updateUser.getId()));
+        }
 
         validateUpdateUser(updateUser);
 
@@ -44,6 +54,10 @@ public class UserService {
             throw new ValidationException("Поле 'id' не может быть пустым");
         }
 
+        if (userStorage.getUserById(userId).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId));
+        }
+
         log.info("Вызван метод UserService.findAllFriends()");
         return new ArrayList<>(userStorage.findAllFriendsUser(userId));
     }
@@ -54,18 +68,54 @@ public class UserService {
     }
 
     public void addFriend(Long userId1, Long userId2) {
+        if (userStorage.getUserById(userId1).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId1));
+        }
+
+        if (userStorage.getUserById(userId2).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь которого нужно добавить в друзья c данным id = %d не найден", userId2));
+        }
+
+        if (userId1.equals(userId2)) {
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
+        }
+
         userStorage.addFriend(userId1, userId2);
         userStorage.addFriend(userId2, userId1);
         log.info("Пользователи с id={} и id={} добавлены в друзья",userId1, userId2);
     }
 
     public void deleteFriend(Long userId1, Long userId2) {
+        if (userStorage.getUserById(userId1).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId1));
+        }
+
+        if (userStorage.getUserById(userId2).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь которого нужно удалить из друзей c данным id = %d не найден", userId2));
+        }
+
+        if (userId1.equals(userId2)) {
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
+        }
+
         userStorage.deleteFriend(userId1, userId2);
         userStorage.deleteFriend(userId2, userId1);
         log.info("Пользователи с id={} и id={} удалены из друзей",userId1, userId2);
     }
 
     public Collection<User> getCommonFriends(Long userId1, Long userId2) {
+        if (userStorage.getUserById(userId1).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId1));
+        }
+
+        if (userStorage.getUserById(userId2).isEmpty()) {
+            throw new NotFoundException(String.format("Пользователь c данным id = %d не найден", userId2));
+        }
+
+        if (userId1.equals(userId2)) {
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
+        }
+
         Set<User> userFriends1 = new HashSet<>(userStorage.findAllFriendsUser(userId1));
         Set<User> userFriends2 = new HashSet<>(userStorage.findAllFriendsUser(userId2));
         userFriends1.retainAll(userFriends2);
@@ -76,7 +126,13 @@ public class UserService {
     }
 
     public User getUserById(Long userId) {
-        return userStorage.getUserById(userId);
+        Optional<User> userOptional = userStorage.getUserById(userId);
+
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
+        return userOptional.get();
     }
 
     private void validateUser(User user) {
@@ -86,42 +142,24 @@ public class UserService {
 
         validateEmailAndLoginAndNameAndBirthday(user);
 
-        checkEmailAndLoginUnique(user, null);
+        if (userStorage.existsByEmail(user.getEmail(), null)) {
+            throw new ValidationException("Пользователь с таким email уже существует");
+        }
+
+        if (userStorage.existsByLogin(user.getLogin(), null)) {
+            throw new ValidationException("Пользователь с таким login уже существует");
+        }
 
     }
 
     private void validateUpdateUser(User updateUser) {
-        if (updateUser == null) {
-            throw new ValidationException("Тело запроса не может быть пустым");
-        }
-
-        if (updateUser.getId() == null) {
-            throw new ValidationException("Поле `id` не может быть пустым");
-        }
-
         validateEmailAndLoginAndNameAndBirthday(updateUser);
 
-        checkEmailAndLoginUnique(updateUser, updateUser.getId());
-    }
-
-    private void checkEmailAndLoginUnique(User user, Long excludeId) {
-        List<User> users = new ArrayList<>(userStorage.findAll());
-
-        boolean loginExists = users
-                .stream()
-                .filter(user1 -> excludeId == null || !user1.getId().equals(excludeId))
-                .anyMatch(user1 -> user1.getLogin().equals(user.getLogin()));
-
-        boolean emailExists = users
-                .stream()
-                .filter(user1 -> excludeId == null || !user1.getId().equals(excludeId))
-                .anyMatch(user1 -> user1.getEmail().equals(user.getEmail()));
-
-        if (emailExists) {
+        if (userStorage.existsByEmail(updateUser.getEmail(), updateUser.getId())) {
             throw new ValidationException("Пользователь с таким email уже существует");
         }
 
-        if (loginExists) {
+        if (userStorage.existsByLogin(updateUser.getLogin(), updateUser.getId())) {
             throw new ValidationException("Пользователь с таким login уже существует");
         }
     }

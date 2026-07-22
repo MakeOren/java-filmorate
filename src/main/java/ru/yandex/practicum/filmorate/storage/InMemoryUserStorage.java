@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,10 +24,6 @@ public class InMemoryUserStorage implements UserStorage {
     public User update(User updateUser) {
         Long userId = updateUser.getId();
 
-        if (!userExists(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
         users.put(userId, updateUser);
 
         return updateUser;
@@ -41,57 +35,46 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUserById(Long userId) {
-        if (!userExists(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        return users.get(userId);
+    public Optional<User> getUserById(Long userId) {
+        return Optional.ofNullable(users.get(userId));
     }
 
     @Override
     public void addFriend(Long userId, Long friendUserId) {
-        if (!userExists(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        if (!userExists(friendUserId)) {
-            throw new NotFoundException("Пользователь которого нужно добавить в друзья не найден");
-        }
-
         Set<Long> userFriends = usersFriends.get(userId);
         userFriends.add(friendUserId);
     }
 
     @Override
     public void deleteFriend(Long userId, Long friendUserId) {
-        if (!userExists(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        if (!userExists(friendUserId)) {
-            throw new NotFoundException("Пользователь которого нужно удалить из друзей не найден");
-        }
-
         Set<Long> userFriends = usersFriends.get(userId);
         userFriends.remove(friendUserId);
     }
 
     @Override
     public Collection<User> findAllFriendsUser(Long userId) {
-        if (!userExists(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
         return usersFriends.get(userId).stream()
                 .map(users::get).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByLogin(String login, Long excludeId) {
+        return users.values()
+                .stream()
+                .filter(user1 -> excludeId == null || !user1.getId().equals(excludeId))
+                .anyMatch(user -> user.getLogin().equals(login));
+    }
+
+    @Override
+    public boolean existsByEmail(String email, Long excludeId) {
+        return users.values()
+                .stream()
+                .filter(user1 -> excludeId == null || !user1.getId().equals(excludeId))
+                .anyMatch(user -> user.getEmail().equals(email));
     }
 
     private long getNextId() {
         return ++currentId;
     }
 
-    private boolean userExists(Long id) {
-        return users.containsKey(id);
-    }
 }

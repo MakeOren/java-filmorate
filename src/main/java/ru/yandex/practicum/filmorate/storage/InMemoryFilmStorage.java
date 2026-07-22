@@ -1,13 +1,9 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-
-
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
@@ -23,20 +19,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Long> findUsersLikeFilm(Long filmId) {
-        if (!filmExits(filmId)) {
-            throw new NotFoundException("Данный фильм не найден");
-        }
-
-        return  new ArrayList<>(filmsLikeUsers.get(filmId));
-    }
-
-    @Override
     public Film update(Film updateFilm) {
-        if (!filmExits(updateFilm.getId())) {
-            throw new NotFoundException("Данный фильм не найден");
-        }
-
         films.put(updateFilm.getId(), updateFilm);
         return updateFilm;
     }
@@ -52,43 +35,30 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        if (!filmExits(filmId)) {
-            throw new NotFoundException("Фильм не найден");
-        }
-
         Set<Long> filmLikeUsers = filmsLikeUsers.get(filmId);
         filmLikeUsers.add(userId);
     }
 
     @Override
     public void deleteLike(Long filmId, Long userId) {
-        if (!filmExits(filmId)) {
-            throw new NotFoundException("Фильм не найден");
-        }
-
         Set<Long> filmLikeUsers = filmsLikeUsers.get(filmId);
         filmLikeUsers.remove(userId);
     }
 
     @Override
-    public Film getFilmById(Long filmId) {
-        if (!filmExits(filmId)) {
-            throw new NotFoundException("Данный фильм не найден");
-        }
-
-        return films.get(filmId);
+    public Optional<Film> getFilmById(Long filmId) {
+        return Optional.ofNullable(films.get(filmId));
     }
 
     @Override
-    public Collection<List> getPopularFilms(Integer count) {
-        filmsLikeUsers.entrySet()
+    public Collection<Film> getPopularFilms(Integer count) {
+        return filmsLikeUsers.entrySet()
                 .stream()
-                .sorted(Comparator.comparingInt(entry-> entry.getValue().size()).reversed())
+                .sorted(Comparator.comparingInt((Map.Entry<Long, Set<Long>> entry) -> entry.getValue().size())
+                        .reversed())
+                .limit(count)
+                .map(entry -> films.get(entry.getKey()))
                 .collect(Collectors.toList());
-    }
-
-    private boolean filmExits(Long id) {
-        return films.containsKey(id);
     }
 
     private long getNextId() {
