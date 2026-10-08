@@ -61,6 +61,15 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Collection<Long> getLikedFilmIds(Long userId) {
+        return filmsLikeUsers.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().contains(userId))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
     private long getNextId() {
         return ++currentId;
     }

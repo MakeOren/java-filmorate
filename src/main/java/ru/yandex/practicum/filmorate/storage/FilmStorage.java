@@ -19,4 +19,6 @@ public interface FilmStorage {
     Optional<Film> getFilmById(Long filmId);
 
     public Collection<Film> getPopularFilms(Integer count);
+
+    Collection<Long> getLikedFilmIds(Long userId);
 }
