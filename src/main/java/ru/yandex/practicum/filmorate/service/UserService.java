@@ -6,7 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ import java.util.*;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
     public User create(User user) {
         validateUser(user);
@@ -133,6 +136,53 @@ public class UserService {
         }
 
         return userOptional.get();
+    }
+
+    public Collection<Film> getRecommendations(Long userId) {
+        getUserById(userId);
+
+        Set<Long> userLikedFilms = new HashSet<>(filmStorage.getLikedFilmIds(userId));
+
+        if (userLikedFilms.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        User similarUser = null;
+        int maxCommonLikes = 0;
+
+        for (User otherUser : userStorage.findAll()) {
+            if (otherUser.getId().equals(userId)) {
+                continue;
+            }
+
+            Set<Long> otherUserLikedFilms =
+                    new HashSet<>(filmStorage.getLikedFilmIds(otherUser.getId()));
+
+            Set<Long> commonFilms = new HashSet<>(userLikedFilms);
+            commonFilms.retainAll(otherUserLikedFilms);
+
+            if (commonFilms.size() > maxCommonLikes) {
+                maxCommonLikes = commonFilms.size();
+                similarUser = otherUser;
+            }
+        }
+
+        if (similarUser == null) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> recommendedFilmIds =
+                new HashSet<>(filmStorage.getLikedFilmIds(similarUser.getId()));
+
+        recommendedFilmIds.removeAll(userLikedFilms);
+
+        List<Film> recommendations = new ArrayList<>();
+
+        for (Long filmId : recommendedFilmIds) {
+            filmStorage.getFilmById(filmId).ifPresent(recommendations::add);
+        }
+
+        return recommendations;
     }
 
     private void validateUser(User user) {
