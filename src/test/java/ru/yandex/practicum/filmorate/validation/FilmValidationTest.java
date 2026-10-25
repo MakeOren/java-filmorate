@@ -35,12 +35,16 @@ class FilmValidationTest {
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
 
-        filmService = new FilmService(userStorage, filmStorage);
+        filmService = new FilmService(
+                userStorage,
+                filmStorage,
+                null,
+                null
+        );
 
         filmController = new FilmController(filmService);
     }
 
-    //name
     @Test
     void shouldNotThrowExceptionWhenNameIsValid() {
         filmController.create(film);
@@ -64,7 +68,6 @@ class FilmValidationTest {
         assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
-    //description
     @Test
     void shouldNotThrowExceptionWhenDescriptionIsNull() {
         film.setDescription(null);
@@ -89,7 +92,6 @@ class FilmValidationTest {
         assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
-    //duration
     @Test
     void shouldNotThrowExceptionWhenDurationIsPositive() {
         film.setDuration(100);
@@ -114,7 +116,6 @@ class FilmValidationTest {
         assertThrows(NotFoundException.class, () -> filmController.update(film));
     }
 
-    //release date
     @Test
     void shouldThrowExceptionWhenReleaseDateIsNull() {
         film.setReleaseDate(null);
