@@ -2,12 +2,14 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -18,8 +20,12 @@ import java.util.*;
 @RequiredArgsConstructor
 public class FilmService {
 
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+    private final MpaService mpaService;
+    private final GenreService genreService;
     private final int defaultCountPopularFilm = 10;
 
     public Film create(Film film) {
@@ -28,6 +34,7 @@ public class FilmService {
         }
 
         validateNameAndDescriptionAndDurationAndReleaseDate(film);
+        validateMpaAndGenres(film);
 
         Film newFilm = filmStorage.create(film);
 
@@ -49,6 +56,7 @@ public class FilmService {
         }
 
         validateNameAndDescriptionAndDurationAndReleaseDate(updateFilm);
+        validateMpaAndGenres(updateFilm);
 
         Film newUpdateFilm = filmStorage.update(updateFilm);
 
@@ -138,6 +146,24 @@ public class FilmService {
         }
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+    }
+
+    private void validateMpaAndGenres(Film film) {
+        if (film.getMpa() != null) {
+            if (film.getMpa().getId() == null) {
+                throw new ValidationException("Поле 'mpa.id' не может быть пустым");
+            }
+            mpaService.getById(film.getMpa().getId());
+        }
+
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (genre.getId() == null) {
+                    throw new ValidationException("Поле 'genres.id' не может быть пустым");
+                }
+                genreService.getById(genre.getId());
+            }
         }
     }
 }
